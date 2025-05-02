@@ -1,0 +1,50 @@
+# Python
+*.py[cod]
+__pycache__/
+*.so
+*.log
+
+# Virtual environment
+.venv/
+env/
+ENV/
+venv/
+pip-selfcheck.json
+
+# Django
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+static/
+local_settings.py
+
+# PyCharm
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Mac OS
+.DS_Store
+
+# Coverage & Test
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Migrations (ixtiyoriy, agar har doim generate qilishni istasangiz)
+**/migrations/*.py
+!**/migrations/__init__.py
+
+# dotenv
+.env
+.env.*
+
+# Celery / Redis
+celerybeat-schedule
+*.pid
+
+# JSON Web Tokenlar
+*.jwt
