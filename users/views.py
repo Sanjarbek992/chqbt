@@ -1,9 +1,9 @@
+# users/views.py
 from rest_framework import viewsets, permissions
 from users.models import CustomUser, UserProfile
 from users.serializers import UserSerializer, ProfileSerializer
+from rest_framework.exceptions import PermissionDenied
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -22,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return CustomUser.objects.none()
 
         user = self.request.user
-        if user.is_superuser or (hasattr(user, 'is_superadmin') and user.is_superadmin):
+        if user.is_superuser or user.is_superadmin():
             return CustomUser.objects.all()
         elif user.is_admin() or user.is_moderator():
             return CustomUser.objects.filter(profile__school=user.profile.school)
@@ -35,6 +35,24 @@ class UserViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(operation_description="Foydalanuvchini yangilash")
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(operation_description="Foydalanuvchini o‘chirish")
+    def destroy(self, request, *args, **kwargs):
+        user = self.request.user
+        if not user.is_superadmin():
+            raise PermissionDenied("Foydalanuvchini faqat SuperAdmin o‘chira oladi.")
+        return super().destroy(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        if not self.request.user.is_superadmin():
+            serializer.validated_data['role'] = 'user'
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if 'role' in serializer.validated_data:
+            if not self.request.user.is_superadmin():
+                raise PermissionDenied("Rolni faqat SuperAdmin o‘zgartira oladi.")
+        serializer.save()
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -54,7 +72,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return UserProfile.objects.none()
 
         user = self.request.user
-        if user.is_superuser or (hasattr(user, 'is_superadmin') and user.is_superadmin):
+        if user.is_superuser or user.is_superadmin():
             return UserProfile.objects.all()
         elif user.is_admin() or user.is_moderator():
             return UserProfile.objects.filter(school=user.profile.school)
@@ -67,6 +85,13 @@ class ProfileViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(operation_description="Foydalanuvchi profilini yangilash")
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(operation_description="Foydalanuvchi profilini o‘chirish")
+    def destroy(self, request, *args, **kwargs):
+        user = self.request.user
+        if not user.is_superadmin():
+            raise PermissionDenied("Profilni faqat SuperAdmin o‘chira oladi.")
+        return super().destroy(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save()

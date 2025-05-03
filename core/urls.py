@@ -46,6 +46,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),  # api/users/, api/profiles/
+    path('api/location/', include('location.urls')),
 
     # JWT
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # login

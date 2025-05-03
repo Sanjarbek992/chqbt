@@ -48,6 +48,7 @@ INSTALLED_APPS += THIRD_PARTY_APPS
 LOCAL_APPS = [
     'users.apps.UsersConfig',
     'location.apps.LocationConfig',
+    'teacher.apps.TeacherConfig',
 ]
 INSTALLED_APPS += LOCAL_APPS
 
