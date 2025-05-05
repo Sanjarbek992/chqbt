@@ -1,4 +1,3 @@
-# location/serializers.py
 from rest_framework import serializers
 from .models import Region, District, School
 
@@ -35,3 +34,7 @@ class SchoolDetailSerializer(serializers.ModelSerializer):
             'id', 'school_number', 'school_type', 'director_full_name', 'geo_location',
             'region', 'region_id', 'district', 'district_id'
         ]
+class SchoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ['id', 'school_number', 'school_type', 'director_full_name']

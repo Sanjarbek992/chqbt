@@ -1,8 +1,10 @@
+# location/views.py
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Region, District, School
 from .serializers import (
     RegionSerializer,
@@ -11,9 +13,10 @@ from .serializers import (
     SchoolDetailSerializer
 )
 from rest_framework.pagination import PageNumberPagination
+from .filters import SchoolFilter
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -73,14 +76,16 @@ class DistrictViewSet(viewsets.ModelViewSet):
 class SchoolViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = SchoolFilter
     search_fields = ['school_number', 'director_full_name', 'district__name', 'region__name']
 
     def get_queryset(self):
+        queryset = School.objects.select_related('region', 'district')
         district_id = self.request.query_params.get('district_id')
         if district_id:
-            return School.objects.filter(district_id=district_id)
-        return School.objects.all()
+            return queryset.filter(district_id=district_id)
+        return queryset
 
     def get_serializer_class(self):
         if self.action == 'list':
