@@ -38,3 +38,9 @@ class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
         fields = ['id', 'school_number', 'school_type', 'director_full_name']
+
+
+class SchoolSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ['id', 'school_number', 'school_type']

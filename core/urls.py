@@ -29,6 +29,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
+import lesson
+
 schema_view = get_schema_view(
     openapi.Info(
         title="CHQBT API",
@@ -57,6 +59,7 @@ urlpatterns += i18n_patterns(
     path(_('api/users/'), include('users.urls')),
     path(_('api/location/'), include('location.urls')),
     path(_('api/teacher/'), include('teacher.urls')),
+    path(_('api/lesson/'), include('lesson.urls')),
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
