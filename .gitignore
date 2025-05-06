@@ -1,50 +1,55 @@
 # Python
-*.py[cod]
 __pycache__/
-*.so
-*.log
-
-# Virtual environment
-.venv/
+*.py[cod]
+*.egg
+*.egg-info/
+*.pyo
+*.pyd
+.Python
 env/
-ENV/
 venv/
-pip-selfcheck.json
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Django
+*.log
+local_settings.py
 db.sqlite3
-*.sqlite3
 media/
 staticfiles/
-static/
-local_settings.py
 
-# PyCharm
-.idea/
-*.iml
+# Environment
+.env
+.env.*
 
 # VS Code
 .vscode/
 
-# Mac OS
+# PyCharm
+.idea/
+
+# macOS va Linux temp fayllar
 .DS_Store
+*.swp
+*.swo
 
-# Coverage & Test
-.coverage
-htmlcov/
-.pytest_cache/
+# Migrations (faqat istasangiz)
+# **/migrations/
+# !**/migrations/__init__.py
 
-# Migrations (ixtiyoriy, agar har doim generate qilishni istasangiz)
-**/migrations/*.py
-!**/migrations/__init__.py
-
-# dotenv
-.env
-.env.*
-
-# Celery / Redis
-celerybeat-schedule
+# Docker
 *.pid
+docker-compose.override.yml
 
-# JSON Web Tokenlar
-*.jwt
+# Byte-compiled or optimized files
+*.pyc
+
+# GitHub workflows cache
+.github/workflows/*.log
+
+# Build
+build/
+dist/
+*.tar.gz
+*.egg-info/

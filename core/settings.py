@@ -39,8 +39,8 @@ INSTALLED_APPS = [
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',
-    'rest_framework_simplejwt',
     'drf_yasg',
+    'oauth2_provider',
 ]
 INSTALLED_APPS += THIRD_PARTY_APPS
 LOCAL_APPS = [
@@ -48,15 +48,19 @@ LOCAL_APPS = [
     'location.apps.LocationConfig',
     'teacher.apps.TeacherConfig',
     'lesson.apps.LessonConfig',
+    'egov_api.apps.EgovApiConfig',
 ]
 INSTALLED_APPS += LOCAL_APPS
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     ),
 }
-
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
     'SECURITY_DEFINITIONS': {
