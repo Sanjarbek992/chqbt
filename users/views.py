@@ -1,100 +1,69 @@
-# users/views.py
-from rest_framework import viewsets, permissions
-from users.models import CustomUser, UserProfile
-from users.serializers import UserSerializer, ProfileSerializer
-from rest_framework.exceptions import PermissionDenied
-from drf_yasg.utils import swagger_auto_schema
+from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from .models import UserProfile
+from .serializers import RegisterSerializer, CheckPinflSerializer, UserProfileSerializer
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsTeacher, IsEmployee, IsRegularUser
+from .utils import create_oauth2_tokens
 
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    Foydalanuvchilarni ko‘rish, yaratish, tahrirlash va o‘chirish uchun API.
+User = get_user_model()
 
-    Superadmin barcha foydalanuvchilarni ko‘radi,
-    Admin/Moderator — faqat o‘z maktabidagilarni,
-    Oddiy foydalanuvchi esa — faqat o‘zini ko‘radi.
-    """
-    queryset = CustomUser.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class UserViewSet(viewsets.GenericViewSet,
+                  mixins.CreateModelMixin):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
 
-    def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False):
-            return CustomUser.objects.none()
+    def get_serializer_class(self):
+        if self.action == 'register':
+            return RegisterSerializer
+        elif self.action == 'check_pinfl':
+            return CheckPinflSerializer
+        elif self.action == 'profile':
+            return UserProfileSerializer
+        return super().get_serializer_class()
 
-        user = self.request.user
-        if user.is_superuser or user.is_superadmin():
-            return CustomUser.objects.all()
-        elif user.is_admin() or user.is_moderator():
-            return CustomUser.objects.filter(profile__school=user.profile.school)
-        return CustomUser.objects.filter(id=user.id)
+    @action(detail=False, methods=['post'], url_path='register')
+    def register(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-    @swagger_auto_schema(operation_description="Yangi foydalanuvchi yaratish")
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+        token_data = create_oauth2_tokens(user)
 
-    @swagger_auto_schema(operation_description="Foydalanuvchini yangilash")
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
+        return Response({
+            "message": "Foydalanuvchi ro‘yxatdan o‘tdi",
+            "token": token_data
+        }, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(operation_description="Foydalanuvchini o‘chirish")
-    def destroy(self, request, *args, **kwargs):
-        user = self.request.user
-        if not user.is_superadmin():
-            raise PermissionDenied("Foydalanuvchini faqat SuperAdmin o‘chira oladi.")
-        return super().destroy(request, *args, **kwargs)
+    @action(detail=False, methods=['post'], url_path='check-pinfl')
+    def check_pinfl(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        pinfl = serializer.validated_data['pinfl']
 
-    def perform_create(self, serializer):
-        if not self.request.user.is_superadmin():
-            serializer.validated_data['role'] = 'user'
+        if not pinfl.isdigit() or len(pinfl) != 14:
+            return Response({"detail": "PINFL noto‘g‘ri formatda."}, status=400)
+
+        exists = User.objects.filter(pinfl=pinfl).exists()
+        if exists:
+            return Response({"detail": "Bu PINFL allaqachon mavjud."}, status=400)
+
+        cached = cache.get(pinfl)
+        return Response({"exists": False, "from_cache": bool(cached), "data": cached})
+
+    @action(detail=False, methods=['get', 'put'], url_path='profile', permission_classes=[IsAuthenticated])
+    def profile(self, request):
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        if request.method == 'GET':
+            serializer = self.get_serializer(profile)
+            return Response(serializer.data)
+
+        serializer = self.get_serializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
         serializer.save()
-
-    def perform_update(self, serializer):
-        if 'role' in serializer.validated_data:
-            if not self.request.user.is_superadmin():
-                raise PermissionDenied("Rolni faqat SuperAdmin o‘zgartira oladi.")
-        serializer.save()
-
-
-class ProfileViewSet(viewsets.ModelViewSet):
-    """
-    Foydalanuvchi profilini boshqarish API.
-
-    Superadmin barcha profillarni ko‘radi,
-    Admin/Moderator — faqat o‘z maktabidagilarni,
-    Oddiy foydalanuvchi esa — faqat o‘zini ko‘radi.
-    """
-    queryset = UserProfile.objects.select_related('user', 'military_rank', 'school')
-    serializer_class = ProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False):
-            return UserProfile.objects.none()
-
-        user = self.request.user
-        if user.is_superuser or user.is_superadmin():
-            return UserProfile.objects.all()
-        elif user.is_admin() or user.is_moderator():
-            return UserProfile.objects.filter(school=user.profile.school)
-        return UserProfile.objects.filter(user=user)
-
-    @swagger_auto_schema(operation_description="Yangi foydalanuvchi profilini yaratish")
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-    @swagger_auto_schema(operation_description="Foydalanuvchi profilini yangilash")
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-
-    @swagger_auto_schema(operation_description="Foydalanuvchi profilini o‘chirish")
-    def destroy(self, request, *args, **kwargs):
-        user = self.request.user
-        if not user.is_superadmin():
-            raise PermissionDenied("Profilni faqat SuperAdmin o‘chira oladi.")
-        return super().destroy(request, *args, **kwargs)
-
-    def perform_create(self, serializer):
-        serializer.save()
-
-    def perform_update(self, serializer):
-        serializer.save()
+        request.user.profile_completed = True
+        request.user.save()
+        return Response(serializer.data)

@@ -46,12 +46,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
+    pinfl = models.CharField(max_length=14, unique=True, verbose_name="PINFL")
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
+    profile_completed = models.BooleanField(default=False)
+    is_verified_by_external_api = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -105,16 +108,22 @@ class MilitaryRank(models.Model):
 # Foydalanuvchi profilingi
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
-    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Tegishli maktab")
+    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Maktabi")
     middle_name = models.CharField(max_length=50, verbose_name="Otasining ismi", blank=True)
     profile_image = models.ImageField(upload_to="profile/", default='static/images/default_profile.png', blank=True)
-    jshir = models.CharField(max_length=14, blank=True, verbose_name="JSHIR")
     military_rank = models.ForeignKey(MilitaryRank, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Harbiy unvoni")
     department = models.CharField(max_length=255, blank=True, null=True, verbose_name="Muassasa yoki boshqarma")
     birth_date = models.DateField(blank=True, null=True)
     birth_place = models.CharField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     passport_series = models.CharField(max_length=10, blank=True, null=True)
+    GENDER_CHOICES = (
+        ('male', 'Erkak'),
+        ('female', 'Ayol'),
+    )
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+    address = models.TextField(blank=True, null=True, verbose_name="Yashash manzili")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -137,3 +146,7 @@ class UserProfile(models.Model):
     class Meta:
         verbose_name = "Profil"
         verbose_name_plural = "Profillar"
+
+    def is_complete(self):
+        required_fields = [self.jshir, self.birth_date, self.gender, self.school]
+        return all(required_fields)

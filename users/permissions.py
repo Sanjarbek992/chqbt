@@ -1,30 +1,22 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+# users/permissions.py
+from rest_framework.permissions import BasePermission
 
-class RoleBasedPermission(BasePermission):
-    """
-    Foydalanuvchining roliga qarab ruxsatlarni boshqaradi.
-    - SuperAdmin: barcha amallar
-    - Admin: faqat o'qish (GET)
-    - Moderator: faqat o'qish (GET)
-    - Teacher: faqat o'ziga tegishli ma'lumotlar
-    """
+class RolePermission(BasePermission):
+    allowed_roles = []
 
     def has_permission(self, request, view):
-        if request.user.is_superuser or request.user.role == "Admin":
-            return True  # Full access
-        elif request.user.role == "Moderator":
-            return True
-        elif request.user.role == "User":
-            return request.method in SAFE_METHODS
-        return False
+        return request.user.is_authenticated and (
+            request.user.role in self.allowed_roles or request.user.role == 'superadmin'
+        )
 
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser or request.user.role == "Admin":
-            return True
-        elif request.user.role == "Moderator":
-            if request.method in SAFE_METHODS:
-                return True
-            return obj.created_by == request.user
-        elif request.user.role == "User":
-            return request.method in SAFE_METHODS
-        return False
+class IsTeacher(RolePermission):
+    allowed_roles = ['teacher']
+
+class IsModerator(RolePermission):
+    allowed_roles = ['moderator']
+
+class IsEmployee(RolePermission):
+    allowed_roles = ['employee']
+
+class IsRegularUser(RolePermission):
+    allowed_roles = ['user']

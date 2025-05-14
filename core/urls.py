@@ -56,7 +56,7 @@ urlpatterns += i18n_patterns(
     path(_('api/location/'), include('location.urls')),
     path(_('api/teacher/'), include('teacher.urls')),
     path(_('api/lesson/'), include('lesson.urls')),
-    # path('api/egov/', include('egov_api.urls')),
+    path('api/egov/', include('egov_api.urls')),
 
 )
 

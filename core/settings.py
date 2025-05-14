@@ -178,3 +178,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+import os
+
+OAUTH2_CLIENT_ID = os.environ.get("OAUTH2_CLIENT_ID")
+OAUTH2_CLIENT_SECRET = os.environ.get("OAUTH2_CLIENT_SECRET")
