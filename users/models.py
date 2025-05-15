@@ -4,6 +4,7 @@ from sorl.thumbnail import get_thumbnail
 from django.urls import reverse_lazy
 from location.models import School
 
+
 # Role tanlovlari
 class Role(models.TextChoices):
     SUPERADMIN = 'superadmin', 'SuperAdmin'
@@ -13,33 +14,40 @@ class Role(models.TextChoices):
     EMPLOYEE = 'employee', 'Employee'
     USER = 'user', 'User'
 
+
 # Maxsus user manager
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, first_name, last_name, role, password=None):
+    def create_user(self, username, first_name, last_name, role, pinfl, password=None):
         if not username:
-            raise ValueError("Foydalanuvchi uchun username talab qilinadi.")
+            raise ValueError("Username talab qilinadi")
+        if not pinfl or len(pinfl) != 14 or not pinfl.isdigit():
+            raise ValueError("PINFL 14 raqamli va to'g'ri formatda bo'lishi kerak")
+
         user = self.model(
             username=username,
             first_name=first_name,
             last_name=last_name,
-            role=role
+            role=role,
+            pinfl=pinfl,
         )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, first_name, last_name, password):
+    def create_superuser(self, username, first_name, last_name, pinfl, password=None):
         user = self.create_user(
             username=username,
             first_name=first_name,
             last_name=last_name,
             role=Role.SUPERADMIN,
+            pinfl=pinfl,
             password=password
         )
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
         return user
+
 
 # Asosiy foydalanuvchi modeli
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -57,7 +65,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_verified_by_external_api = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'pinfl']
 
     objects = CustomUserManager()
 
@@ -94,6 +102,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = "Foydalanuvchi"
         verbose_name_plural = "Foydalanuvchilar"
 
+
 # Harbiy unvonlar
 class MilitaryRank(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Harbiy unvon")
@@ -105,13 +114,15 @@ class MilitaryRank(models.Model):
         verbose_name = "Harbiy unvon"
         verbose_name_plural = "Harbiy unvonlar"
 
+
 # Foydalanuvchi profilingi
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
     school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Maktabi")
     middle_name = models.CharField(max_length=50, verbose_name="Otasining ismi", blank=True)
     profile_image = models.ImageField(upload_to="profile/", default='static/images/default_profile.png', blank=True)
-    military_rank = models.ForeignKey(MilitaryRank, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Harbiy unvoni")
+    military_rank = models.ForeignKey(MilitaryRank, on_delete=models.SET_NULL, null=True, blank=True,
+                                      verbose_name="Harbiy unvoni")
     department = models.CharField(max_length=255, blank=True, null=True, verbose_name="Muassasa yoki boshqarma")
     birth_date = models.DateField(blank=True, null=True)
     birth_place = models.CharField(max_length=255, blank=True, null=True)

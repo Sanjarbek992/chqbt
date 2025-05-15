@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 from decouple import config
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -68,7 +69,7 @@ SWAGGER_SETTINGS = {
             'type': 'apiKey',
             'name': 'Authorization',
             'in': 'header',
-            'description': "JWT token kiriting. Masalan: `Bearer <token>`"
+            'description': "Bearer <ixPYGl2gceUvE37DpFwjqTSqKS6i0j>"
         }
     },
 }
@@ -168,6 +169,16 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://localhost:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
 
 ASGI_APPLICATION = 'core.asgi.application'
 CHANNEL_LAYERS = {
@@ -178,7 +189,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
-import os
 
-OAUTH2_CLIENT_ID = os.environ.get("OAUTH2_CLIENT_ID")
-OAUTH2_CLIENT_SECRET = os.environ.get("OAUTH2_CLIENT_SECRET")
+OAUTH2_CLIENT_ID = config("OAUTH2_CLIENT_ID")
+OAUTH2_CLIENT_SECRET = config("OAUTH2_CLIENT_SECRET")
+BASE_OAUTH_URL = config("BASE_OAUTH_URL", default="http://localhost:8000")

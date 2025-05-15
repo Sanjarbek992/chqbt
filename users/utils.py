@@ -1,34 +1,48 @@
-# users/utils.py
-from oauth2_provider.models import get_application_model
-from oauthlib.common import generate_token
-from oauth2_provider.models import AccessToken, RefreshToken
-from django.utils import timezone
-from datetime import timedelta
+import requests
 from django.conf import settings
 
-Application = get_application_model()
-
 def create_oauth2_tokens(user):
-    app = Application.objects.get(client_id=settings.OAUTH2_CLIENT_ID)
-
-    expires = timezone.now() + timedelta(hours=1)
-    access_token = AccessToken.objects.create(
-        user=user,
-        scope='read write',
-        expires=expires,
-        token=generate_token(),
-        application=app,
-    )
-    refresh_token = RefreshToken.objects.create(
-        user=user,
-        token=generate_token(),
-        access_token=access_token,
-        application=app,
-    )
-
-    return {
-        'access_token': access_token.token,
-        'refresh_token': refresh_token.token,
-        'token_type': 'Bearer',
-        'expires_in': 3600
+    data = {
+        'grant_type': 'password',
+        'username': user.username,
+        'password': user.raw_password,
+        'client_id': settings.OAUTH2_CLIENT_ID,
+        'client_secret': settings.OAUTH2_CLIENT_SECRET,
     }
+
+    url = f"{settings.BASE_OAUTH_URL}/o/token/"
+
+    response = requests.post(url, data=data)
+
+    if response.status_code != 200:
+        raise Exception("Token olishda xatolik: " + response.text)
+
+    return response.json()
+
+from django.core.cache import cache
+from datetime import timedelta
+
+MAX_ATTEMPTS = 5
+BLOCK_MINUTES = 3
+
+def get_login_cache_key(username):
+    return f"login_attempts:{username}"
+
+def get_block_key(username):
+    return f"login_blocked:{username}"
+
+def increment_login_attempt(username):
+    key = get_login_cache_key(username)
+    attempts = cache.get(key, 0) + 1
+    cache.set(key, attempts, timeout=60 * BLOCK_MINUTES)  # harakatlar 30 daqiqaga saqlanadi
+    return attempts
+
+def is_user_blocked(username):
+    return cache.get(get_block_key(username)) is not None
+
+def block_user(username):
+    cache.set(get_block_key(username), True, timeout=60 * BLOCK_MINUTES)
+
+def reset_login_attempts(username):
+    cache.delete(get_login_cache_key(username))
+    cache.delete(get_block_key(username))
