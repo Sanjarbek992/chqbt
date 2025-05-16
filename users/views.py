@@ -58,7 +58,7 @@ class UserViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         user.raw_password = serializer.validated_data['password']
-        token_data = create_oauth2_tokens(user)
+        token_data = create_oauth2_tokens(username, password)
         return Response({
             "message": "Foydalanuvchi yaratildi",
             "user_id": user.id,
@@ -96,7 +96,7 @@ class UserViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                 }, status=403)
             return Response({"detail": "Login yoki parol noto‘g‘ri."}, status=400)
 
-        # ✅ 3. Urinishlar tozalansin
+
         reset_login_attempts(username)
 
         user.raw_password = password
