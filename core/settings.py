@@ -46,10 +46,9 @@ THIRD_PARTY_APPS = [
 INSTALLED_APPS += THIRD_PARTY_APPS
 LOCAL_APPS = [
     'users.apps.UsersConfig',
-    'location.apps.LocationConfig',
-    'teacher.apps.TeacherConfig',
     'lesson.apps.LessonConfig',
     'egov_api.apps.EgovApiConfig',
+    'material_base.apps.MaterialBaseConfig',
 ]
 INSTALLED_APPS += LOCAL_APPS
 
@@ -193,3 +192,6 @@ CHANNEL_LAYERS = {
 OAUTH2_CLIENT_ID = config("OAUTH2_CLIENT_ID")
 OAUTH2_CLIENT_SECRET = config("OAUTH2_CLIENT_SECRET")
 BASE_OAUTH_URL = config("BASE_OAUTH_URL", default="http://localhost:8000")
+EGOV_USERNAME = os.getenv("EGOV_USERNAME")
+EGOV_PASSWORD = os.getenv("EGOV_PASSWORD")
+EGOV_BASIC_AUTH = os.getenv("EGOV_BASIC_AUTH")

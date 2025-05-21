@@ -35,7 +35,6 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path(_('admin/'), admin.site.urls),
     path(_('api/users/'), include('users.urls')),
-    path(_('api/egov/'), include('egov_api.urls')),
 )
 
 # Media fayllar uchun

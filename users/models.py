@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from sorl.thumbnail import get_thumbnail
 from django.urls import reverse_lazy
-from location.models import School
+
 
 
 # Role tanlovlari
@@ -118,7 +118,6 @@ class MilitaryRank(models.Model):
 # Foydalanuvchi profilingi
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
-    school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Maktabi")
     middle_name = models.CharField(max_length=50, verbose_name="Otasining ismi", blank=True)
     profile_image = models.ImageField(upload_to="profile/", default='static/images/default_profile.png', blank=True)
     military_rank = models.ForeignKey(MilitaryRank, on_delete=models.SET_NULL, null=True, blank=True,

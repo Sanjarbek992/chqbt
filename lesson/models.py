@@ -1,5 +1,5 @@
 from django.db import models
-from location.models import School
+
 from django.utils.translation import gettext_lazy as _
 
 class LessonType(models.TextChoices):
@@ -8,7 +8,6 @@ class LessonType(models.TextChoices):
     DEMO = 'demo', _('Ko‘rgazmali')
 
 class Lesson(models.Model):
-    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='lessons', db_index=True)
     subject = models.CharField(max_length=255, verbose_name=_("Fan"))
     topic = models.CharField(max_length=255, verbose_name=_("Mavzu"))
     date = models.DateField(verbose_name=_("Sana"), db_index=True)
@@ -21,11 +20,7 @@ class Lesson(models.Model):
     class Meta:
         verbose_name = _("Dars")
         verbose_name_plural = _("Darslar")
-        indexes = [
-            models.Index(fields=['school', 'grade']),
-            models.Index(fields=['school', 'date']),
-            models.Index(fields=['lesson_type', 'grade']),
-        ]
+
 
 class LessonSchedule(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='schedule')
