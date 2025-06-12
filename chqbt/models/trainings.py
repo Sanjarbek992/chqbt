@@ -1,10 +1,12 @@
 from django.db import models
 from chqbt.models.schools import School
 
+
 class LessonType(models.TextChoices):
-    THEORY = 'theory', 'Nazariy'
-    PRACTICAL = 'practical', 'Amaliy'
-    DEMO = 'demo', 'Ko‘rgazmali'
+    THEORY = "theory", "Nazariy"
+    PRACTICAL = "practical", "Amaliy"
+    DEMO = "demo", "Ko‘rgazmali"
+
 
 class Lesson(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE)
@@ -15,4 +17,3 @@ class Lesson(models.Model):
 
     def __str__(self):
         return f"{self.subject} - {self.date}"
-

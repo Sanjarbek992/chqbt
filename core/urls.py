@@ -5,37 +5,31 @@ from django.conf.urls.static import static
 from django.utils.translation import gettext_lazy as _
 from django.conf.urls.i18n import i18n_patterns
 
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from rest_framework import permissions
-
-schema_view = get_schema_view(
-    openapi.Info(
-        title="CHQBT API",
-        default_version='v1',
-        description="Milliy tizim uchun API hujjat",
-        contact=openapi.Contact(email="support@example.com"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
 )
 
 urlpatterns = [
-    path('i18n/', include('django.conf.urls.i18n')),
-
-    # OAuth2 token URL (POST /o/token/ → access_token, refresh_token)
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-
-    # Swagger va Redoc
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path("admin/", admin.site.urls),
+    path("i18n/", include("django.conf.urls.i18n")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/docs/swagger/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
+    path(
+        "api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
+    ),
 ]
 
-# Internationalized routes
 urlpatterns += i18n_patterns(
-    path(_('admin/'), admin.site.urls),
-    path(_('api/users/'), include('users.urls')),
+    path(_("api/users/"), include("users.urls")),
+    path(_("api/materials/"), include("material_base.urls")),
+    path(_("api/egov_api/"), include("egov_api.urls")),
+    path(_("api/lesson/"), include("lesson.urls")),
 )
 
-# Media fayllar uchun
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

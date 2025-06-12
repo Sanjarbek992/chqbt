@@ -1,21 +1,23 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
 from sorl.thumbnail import get_thumbnail
 from django.urls import reverse_lazy
+from egov_api.models.school_models import School
 
 
-
-# Role tanlovlari
 class Role(models.TextChoices):
-    SUPERADMIN = 'superadmin', 'SuperAdmin'
-    ADMIN = 'admin', 'Admin'
-    MODERATOR = 'moderator', 'Moderator'
-    TEACHER = 'teacher', 'Teacher'
-    EMPLOYEE = 'employee', 'Employee'
-    USER = 'user', 'User'
+    SUPERADMIN = "superadmin", "SuperAdmin"
+    ADMIN = "admin", "Admin"
+    MODERATOR = "moderator", "Moderator"
+    TEACHER = "teacher", "Teacher"
+    EMPLOYEE = "employee", "Employee"
+    USER = "user", "User"
 
 
-# Maxsus user manager
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, first_name, last_name, role, pinfl, password=None):
         if not username:
@@ -41,7 +43,7 @@ class CustomUserManager(BaseUserManager):
             last_name=last_name,
             role=Role.SUPERADMIN,
             pinfl=pinfl,
-            password=password
+            password=password,
         )
         user.is_staff = True
         user.is_superuser = True
@@ -49,7 +51,6 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-# Asosiy foydalanuvchi modeli
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     first_name = models.CharField(max_length=50)
@@ -64,8 +65,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     profile_completed = models.BooleanField(default=False)
     is_verified_by_external_api = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'pinfl']
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["first_name", "last_name", "pinfl"]
 
     objects = CustomUserManager()
 
@@ -103,7 +104,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Foydalanuvchilar"
 
 
-# Harbiy unvonlar
 class MilitaryRank(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Harbiy unvon")
 
@@ -117,21 +117,59 @@ class MilitaryRank(models.Model):
 
 # Foydalanuvchi profilingi
 class UserProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
-    middle_name = models.CharField(max_length=50, verbose_name="Otasining ismi", blank=True)
-    profile_image = models.ImageField(upload_to="profile/", default='static/images/default_profile.png', blank=True)
-    military_rank = models.ForeignKey(MilitaryRank, on_delete=models.SET_NULL, null=True, blank=True,
-                                      verbose_name="Harbiy unvoni")
-    department = models.CharField(max_length=255, blank=True, null=True, verbose_name="Muassasa yoki boshqarma")
-    birth_date = models.DateField(blank=True, null=True)
-    birth_place = models.CharField(max_length=255, blank=True, null=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    passport_series = models.CharField(max_length=10, blank=True, null=True)
-    GENDER_CHOICES = (
-        ('male', 'Erkak'),
-        ('female', 'Ayol'),
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name="profile"
     )
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+
+    middle_name = models.CharField(
+        max_length=50, verbose_name="Otasining ismi", blank=True
+    )
+    birth_date = models.DateField(blank=True, null=True)
+    gender = models.CharField(
+        max_length=10, choices=[("male", "Erkak"), ("female", "Ayol")], blank=True
+    )
+
+    passport_series = models.CharField(
+        max_length=10, blank=True, null=True, verbose_name="Passport seriyasi"
+    )
+    passport_number = models.CharField(
+        max_length=10, blank=True, null=True, verbose_name="Passport raqami"
+    )
+
+    oblast = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="Viloyat", db_index=True
+    )
+    region = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="Tuman", db_index=True
+    )
+
+    organization_name = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name="Tashkilot nomi"
+    )
+    position_name = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name="Lavozimi"
+    )
+    school = models.ForeignKey(
+        School,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="user_profiles",
+        verbose_name="Maktab",
+        db_index=True,
+    )
+
+    profile_image = models.ImageField(
+        upload_to="profile/", default="static/images/default_profile.png", blank=True
+    )
+    military_rank = models.ForeignKey(
+        MilitaryRank,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Harbiy unvoni",
+    )
+    phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True, verbose_name="Yashash manzili")
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -140,23 +178,39 @@ class UserProfile(models.Model):
     def get_profile_image(self):
         if self.profile_image:
             return self.profile_image.url
-        return '/static/images/default_profile.png'
+        return "/static/images/default_profile.png"
 
     def image_thumbnail(self):
         if self.profile_image:
-            return get_thumbnail(self.profile_image, '200x200', crop='center', quality=90).url
+            return get_thumbnail(
+                self.profile_image, "200x200", crop="center", quality=90
+            ).url
         return None
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.user.role})"
 
     def get_absolute_url(self):
-        return reverse_lazy('user_profile', kwargs={'pk': self.pk})
+        return reverse_lazy("user_profile", kwargs={"pk": self.pk})
+
+    def is_complete(self):
+        required_fields = [
+            self.birth_date,
+            self.gender,
+            self.address,
+            self.phone,
+            self.military_rank,
+            self.school,
+        ]
+        return all(required_fields)
 
     class Meta:
         verbose_name = "Profil"
         verbose_name_plural = "Profillar"
-
-    def is_complete(self):
-        required_fields = [self.jshir, self.birth_date, self.gender, self.school]
-        return all(required_fields)
+        indexes = [
+            models.Index(fields=["oblast"]),
+            models.Index(fields=["region"]),
+            models.Index(fields=["school"]),
+            models.Index(fields=["oblast", "region"]),
+            models.Index(fields=["school", "region"]),
+        ]

@@ -24,8 +24,9 @@ def parse_teacher_data(data: dict) -> dict:
         "organisation_id": data["organizationid"],
         "organisation_name": data["organizationname"],
         "position_name": data.get("positioname", ""),
-        "school": school
+        "school": school,
     }
+
 
 #
 # def fetch_and_save_teachers_by_pinfl(pinfl: str) -> tuple:

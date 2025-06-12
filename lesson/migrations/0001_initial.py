@@ -8,49 +8,115 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Lesson',
+            name="Lesson",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('subject', models.CharField(max_length=255, verbose_name='Fan')),
-                ('topic', models.CharField(max_length=255, verbose_name='Mavzu')),
-                ('date', models.DateField(db_index=True, verbose_name='Sana')),
-                ('lesson_type', models.CharField(choices=[('theory', 'Nazariy'), ('practical', 'Amaliy'), ('demo', 'Ko‘rgazmali')], db_index=True, max_length=20, verbose_name='Mashg‘ulot turi')),
-                ('grade', models.IntegerField(choices=[(10, '10-sinf'), (11, '11-sinf')], db_index=True, verbose_name='Sinf')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("subject", models.CharField(max_length=255, verbose_name="Fan")),
+                ("topic", models.CharField(max_length=255, verbose_name="Mavzu")),
+                ("date", models.DateField(db_index=True, verbose_name="Sana")),
+                (
+                    "lesson_type",
+                    models.CharField(
+                        choices=[
+                            ("theory", "Nazariy"),
+                            ("practical", "Amaliy"),
+                            ("demo", "Ko‘rgazmali"),
+                        ],
+                        db_index=True,
+                        max_length=20,
+                        verbose_name="Mashg‘ulot turi",
+                    ),
+                ),
+                (
+                    "grade",
+                    models.IntegerField(
+                        choices=[(10, "10-sinf"), (11, "11-sinf")],
+                        db_index=True,
+                        verbose_name="Sinf",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Dars',
-                'verbose_name_plural': 'Darslar',
+                "verbose_name": "Dars",
+                "verbose_name_plural": "Darslar",
             },
         ),
         migrations.CreateModel(
-            name='LessonMaterial',
+            name="LessonMaterial",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file', models.FileField(upload_to='lesson_materials/', verbose_name='Fayl')),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Yuklangan vaqti')),
-                ('lesson', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='materials', to='lesson.lesson')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "file",
+                    models.FileField(
+                        upload_to="lesson_materials/", verbose_name="Fayl"
+                    ),
+                ),
+                (
+                    "uploaded_at",
+                    models.DateTimeField(
+                        auto_now_add=True, db_index=True, verbose_name="Yuklangan vaqti"
+                    ),
+                ),
+                (
+                    "lesson",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="materials",
+                        to="lesson.lesson",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Material',
-                'verbose_name_plural': 'Dars materiallari',
+                "verbose_name": "Material",
+                "verbose_name_plural": "Dars materiallari",
             },
         ),
         migrations.CreateModel(
-            name='LessonSchedule',
+            name="LessonSchedule",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('weekday', models.CharField(max_length=20, verbose_name='Hafta kuni')),
-                ('time', models.TimeField(verbose_name='Vaqti')),
-                ('lesson', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schedule', to='lesson.lesson')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("weekday", models.CharField(max_length=20, verbose_name="Hafta kuni")),
+                ("time", models.TimeField(verbose_name="Vaqti")),
+                (
+                    "lesson",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="schedule",
+                        to="lesson.lesson",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Dars jadvali',
-                'verbose_name_plural': 'Dars jadvallari',
+                "verbose_name": "Dars jadvali",
+                "verbose_name_plural": "Dars jadvallari",
             },
         ),
     ]

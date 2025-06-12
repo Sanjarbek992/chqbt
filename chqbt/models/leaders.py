@@ -1,6 +1,7 @@
 from django.db import models
 from chqbt.models.schools import School
 
+
 class Leader(models.Model):
     school = models.OneToOneField(School, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=255)

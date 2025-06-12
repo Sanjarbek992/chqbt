@@ -7,21 +7,31 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='InventoryItem',
+            name="InventoryItem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255, verbose_name='Vosita nomi')),
-                ('quantity', models.PositiveIntegerField(default=0, verbose_name='Miqdori')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255, verbose_name="Vosita nomi")),
+                (
+                    "quantity",
+                    models.PositiveIntegerField(default=0, verbose_name="Miqdori"),
+                ),
             ],
             options={
-                'verbose_name': 'Vosita',
-                'verbose_name_plural': 'Vositalar',
-                'db_table': 'inventory_item',
+                "verbose_name": "Vosita",
+                "verbose_name_plural": "Vositalar",
+                "db_table": "inventory_item",
             },
         ),
     ]

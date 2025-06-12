@@ -25,6 +25,8 @@ def parse_school_data(item):
         "latitude": item.get("latitude"),
         "longitude": item.get("longitude"),
     }
+
+
 #
 # def fetch_and_save_schools_bysoato(soato_code: str) -> tuple:
 #     """

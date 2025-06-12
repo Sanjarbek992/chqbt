@@ -3,7 +3,8 @@ from django.conf import settings
 from django.core.cache import cache
 
 TOKEN_CACHE_KEY = "egov_api_token"
-TOKEN_TIMEOUT = 3000 # sekundda hisoblanadi (qancha qilish kerakligini sorayman)
+TOKEN_TIMEOUT = 3000  # sekundda hisoblanadi (qancha qilish kerakligini sorayman)
+
 
 def get_egov_token():
     """Tizimdan yangi token olish"""
@@ -23,7 +24,10 @@ def get_egov_token():
         cache.set(TOKEN_CACHE_KEY, token, timeout=TOKEN_TIMEOUT)
         return token
     else:
-        raise Exception(f"Token olishda xatolik: {response.status_code}-{response.text}")
+        raise Exception(
+            f"Token olishda xatolik: {response.status_code}-{response.text}"
+        )
+
 
 def get_cached_token():
     """Tokenni cache orqali olish yoki yangilab olish"""

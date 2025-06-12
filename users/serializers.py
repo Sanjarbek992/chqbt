@@ -1,85 +1,96 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import CustomUser, Role
+from .models import CustomUser, UserProfile, Role, MilitaryRank
+from egov_api.models.teacher_models import Teacher
+from egov_api.models.school_models import School
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.db import transaction
 
 User = get_user_model()
 
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=50)
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
-    pinfl = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = CustomUser
-        fields = ('username', 'first_name', 'last_name', 'password', 'confirm_password', 'pinfl')
+    pinfl = serializers.CharField(max_length=14)
 
     def validate(self, data):
-        if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError("Parollar mos emas")
-        if len(data['pinfl']) != 14 or not data['pinfl'].isdigit():
-            raise serializers.ValidationError("PINFL noto'g'ri formatda")
-        if CustomUser.objects.filter(pinfl=data['pinfl']).exists():
-            raise serializers.ValidationError("Bu PINFL allaqachon mavjud")
+        if data["password"] != data["confirm_password"]:
+            raise serializers.ValidationError("Parollar mos emas!")
+
+        if CustomUser.objects.filter(pinfl=data["pinfl"]).exists():
+            raise serializers.ValidationError(
+                "Bu PINFL bilan foydalanuvchi ro'yxatdan o'tgan!"
+            )
+
+        teacher = Teacher.objects.filter(pinfl=data["pinfl"]).first()
+        data["teacher"] = teacher
         return data
 
+    @transaction.atomic
     def create(self, validated_data):
-        validated_data.pop('confirm_password')
-        pinfl = validated_data.pop('pinfl')
-        role = Role.USER
-        return CustomUser.objects.create_user(
-            **validated_data,
+        username = validated_data["username"]
+        password = validated_data["password"]
+        pinfl = validated_data["pinfl"]
+        teacher = validated_data["teacher"]
+
+        role = Role.TEACHER if teacher else Role.USER
+        first_name = teacher.first_name if teacher else "Ismi"
+        last_name = teacher.last_name if teacher else "Familiyasi"
+
+        user = CustomUser.objects.create_user(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
             pinfl=pinfl,
-            role=role
+            role=role,
+            password=password,
         )
 
+        if not hasattr(user, "profile"):
+            if teacher:
+                UserProfile.objects.create(
+                    user=user,
+                    middle_name=teacher.middle_name,
+                    birth_date=teacher.birth_date,
+                    gender=teacher.gender,
+                    passport_series=teacher.document_series,
+                    passport_number=teacher.document_number,
+                    oblast=teacher.oblast,
+                    region=teacher.region,
+                    school=teacher.school,
+                    organization_name=teacher.organisation_name,
+                    position_name=teacher.position_name,
+                )
+            else:
+                UserProfile.objects.create(user=user)
 
-
-class CheckPinflSerializer(serializers.Serializer):
-    pinfl = serializers.CharField(
-        max_length=14,
-        help_text="Foydalanuvchining 14 xonali PINFL raqami"
-    )
+        refresh = RefreshToken.for_user(user)
+        return {
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "token_type": "Bearer",
+        }
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomUser
-        fields = '__all__'
-        read_only_fields = ('user', 'created_at', 'updated_at')
+        model = UserProfile
+        fields = "__all__"
 
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(help_text="Foydalanuvchi nomi")
-    password = serializers.CharField(write_only=True, help_text="Parol", style={"input_type": "password"})
-
-    class Meta:
-        swagger_schema_fields = {
-            "example": {
-                "username": "testuser",
-                "password": "Secret123"
-            }
-        }
-
-
-class RefreshTokenSerializer(serializers.Serializer):
-    refresh_token = serializers.CharField(
-        help_text="Avval olingan refresh_token",
-        style={"input_type": "text"}
-    )
-
-    class Meta:
-        swagger_schema_fields = {
-            "example": {
-                "refresh_token": "f9f5d3ed1e3f45158d27a..."
-            }
-        }
-
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(write_only=True)
-    new_password = serializers.CharField(write_only=True)
-
-    def validate_new_password(self, value):
-        if len(value) < 8:
-            raise serializers.ValidationError("Yangi parol kamida 8 ta belgidan iborat bo‘lishi kerak.")
-        return value
+        if request and not request.user.is_superuser:
+            for field in [
+                "school",
+                "passport_series",
+                "passport_number",
+                "oblast",
+                "region",
+            ]:
+                if field in fields:
+                    fields[field].read_only = True
+        return fields

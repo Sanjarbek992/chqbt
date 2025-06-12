@@ -5,11 +5,12 @@ from egov_api.models.student_models import Student
 from egov_api.models.school_models import School
 from django.utils.dateparse import parse_date
 
+
 def parse_student_data(data: dict) -> dict:
     """
     API JSON dan Student modeliga mos dict shalga aylantirish
     """
-    school=School.objects.get(ext_id=data["organizationid"]).first()
+    school = School.objects.get(ext_id=data["organizationid"]).first()
 
     return {
         "pinfl": data["pinfl"],
@@ -31,6 +32,7 @@ def parse_student_data(data: dict) -> dict:
         "school_year_id": data.get("schoolyearid"),
         "mfy_id": data.get("mfyid"),
     }
+
 
 # def fetch_and_save_student_by_pinfl(pinfl: str) -> tuple:
 #     """

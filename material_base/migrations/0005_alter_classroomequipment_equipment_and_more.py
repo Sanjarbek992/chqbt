@@ -7,19 +7,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('egov_api', '0001_initial'),
-        ('material_base', '0004_alter_schoolmaterialbase_is_available'),
+        ("egov_api", "0001_initial"),
+        ("material_base", "0004_alter_schoolmaterialbase_is_available"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='classroomequipment',
-            name='equipment',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='equipment', to='material_base.equipment', verbose_name='Maktab jihozlari'),
+            model_name="classroomequipment",
+            name="equipment",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="equipment",
+                to="material_base.equipment",
+                verbose_name="Maktab jihozlari",
+            ),
         ),
         migrations.AlterField(
-            model_name='classroomequipment',
-            name='school',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='school', to='egov_api.school', verbose_name='Maktab'),
+            model_name="classroomequipment",
+            name="school",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="school",
+                to="egov_api.school",
+                verbose_name="Maktab",
+            ),
         ),
     ]
