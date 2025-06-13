@@ -25,11 +25,13 @@ urlpatterns = [
     ),
 ]
 
-urlpatterns += i18n_patterns(
+urlpatterns += [
     path(_("api/users/"), include("users.urls")),
     path(_("api/materials/"), include("material_base.urls")),
     path(_("api/egov_api/"), include("egov_api.urls")),
     path(_("api/lesson/"), include("lesson.urls")),
-)
+    path(_("api/training/"), include("training.urls")),
+    path(_("api/competition/"), include("competition.urls")),
+]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
